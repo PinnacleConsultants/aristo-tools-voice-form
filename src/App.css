@@ -137,7 +137,7 @@ input.listening, textarea.listening {
 }
 
 .live {
-  grid-column: 2 / 4;
+  grid-column: 2 / 5;
   min-height: 18px;
   color: var(--muted);
   font-size: 13px;
@@ -289,5 +289,6 @@ input.listening, textarea.listening {
 }
 
 @media (max-width: 520px) {
-  .field { grid-template-columns: 90px 1fr auto; }
+  .field { grid-template-columns: 90px 1fr auto auto; gap: 6px; }
+  .lang-toggle { min-width: 40px; padding: 0 6px; font-size: 9px; }
 }
