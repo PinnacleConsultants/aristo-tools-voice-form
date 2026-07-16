@@ -50,7 +50,13 @@ export default function App() {
   return (
     <div className="wrap">
       <header>
-        <h1>🎙️ Voice Form <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>React POC</span></h1>
+        <h1 style={{ display: 'flex', alignItems: 'center' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="clinical-icon" style={{ width: 28, height: 28, color: 'var(--accent)', marginRight: 10 }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h3L9 5l4 14 3-9 2 2h3" />
+          </svg>
+          Clinical Voice Intake
+          <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 10, fontWeight: 500 }}>React Clinical Portal</span>
+        </h1>
         <p>
           Uses the browser's <code>SpeechRecognition</code> (Web Speech API) — the
           same engine that powers YouTube's mic button. Click a mic and speak.
@@ -157,7 +163,7 @@ export default function App() {
       </div>
 
       <div className="help">
-        <b>How it works:</b> each 🎤 button calls <code>new webkitSpeechRecognition()</code>,
+        <b>How it works:</b> each microphone button calls <code>new webkitSpeechRecognition()</code>,
         listens once, and writes the transcript into the matching field. The smart-fill
         button listens to a longer sentence and routes values to fields using keywords
         like <code>name is</code>, <code>age</code>, <code>weigh</code>/<code>weight</code>.
@@ -165,9 +171,11 @@ export default function App() {
       </div>
 
       {!isSpeechSupported && (
-        <div className="unsupported">
-          ⚠️ Your browser doesn't support the Web Speech API. Try Chrome, Edge, or Safari.
-          (Firefox does not support <code>SpeechRecognition</code> yet.)
+        <div className="unsupported" style={{ display: 'flex', alignItems: 'center' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20, marginRight: 8, flexShrink: 0 }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          Your browser doesn't support the Web Speech API. Try Chrome, Edge, or Safari. (Firefox does not support SpeechRecognition yet.)
         </div>
       )}
     </div>

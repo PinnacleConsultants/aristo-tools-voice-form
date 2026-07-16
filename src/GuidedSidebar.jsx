@@ -102,7 +102,12 @@ export function GuidedSidebar({ langFor, onChange, onActiveChange }) {
   if (!isActive) {
     return (
       <div className="card guided-sidebar">
-        <h2>🎙️ Guided Voice Mode</h2>
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 22, height: 22, verticalAlign: 'middle', marginRight: 8, color: 'var(--accent)', display: 'inline-block' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z" />
+          </svg>
+          Guided Clinical Intake
+        </h2>
         <p className="guided-desc">
           Fill the entire form step-by-step using guided voice commands.
         </p>

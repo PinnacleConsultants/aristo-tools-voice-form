@@ -4,12 +4,12 @@
  * the per-field cycle order (click the badge on a mic to cycle).
  */
 export const LANGUAGES = [
-  { code: 'en-IN', label: '🇬🇧 English' },
-  { code: 'hi-IN', label: '🇮🇳 हिन्दी' },
-  { code: 'mr-IN', label: '🇮🇳 मराठी' },
-  { code: 'gu-IN', label: '🇮🇳 ગુજરાતી' },
-  { code: 'ta-IN', label: '🇮🇳 தமிழ்' },
-  { code: 'te-IN', label: '🇮🇳 తెలుగు' },
+  { code: 'en-IN', label: 'GB English' },
+  { code: 'hi-IN', label: 'IN हिन्दी' },
+  { code: 'mr-IN', label: 'IN मराठी' },
+  { code: 'gu-IN', label: 'IN ગુજરાતી' },
+  { code: 'ta-IN', label: 'IN தமிழ்' },
+  { code: 'te-IN', label: 'IN తెలుగు' },
 ];
 
 export const DEFAULT_LANG = 'en-IN';
