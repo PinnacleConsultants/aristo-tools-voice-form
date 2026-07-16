@@ -64,6 +64,16 @@ combining marks (virama U+094D), so the smart-parse regexes use explicit Unicode
 range lookarounds (`[^a-z\u0900-\u097F\u0980-\u09FF\u0A80-\u0AFF\u0B00-\u0B7F\u0C00-\u0C7F]`)
 for word boundaries on Indic text.
 
+### Why the hook remembers `lastInterim`
+When `rec.stop()` is called (e.g. by the silence timer or the user clicking
+the mic again), the Web Speech API fires `onend` **without finalizing the
+last interim result**. If we only relied on `finalTranscript` (which is only
+populated when `isFinal: true` chunks arrive), short utterances like
+*"my name is Arjun"* could show the text in red in the live transcript but
+never reach the parser. The hook now keeps `lastInterim` and falls back to
+it in `onend` when `finalTranscript` is empty. See the regression test in
+`src/useSpeechRecognition.test.js` named *REGRESSION: falls back to lastInterim…*.
+
 ## Tests
 
 `npm test` runs `parsers.test.js`, covering:
