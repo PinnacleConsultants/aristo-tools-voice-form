@@ -1,5 +1,5 @@
 import { useSpeechRecognition } from './useSpeechRecognition';
-import { nextLang } from './languages';
+import { nextLang, getLangShortLabel } from './languages';
 
 /**
  * Generic voice field. Controlled component: value + onChange are owned by
@@ -66,10 +66,10 @@ export function VoiceField({
         type="button"
         className="lang-toggle"
         onClick={() => onLangCycle(id)}
-        aria-label={`Change language for ${label}, currently ${lang}`}
-        title={`Change language for ${label} (currently ${lang})`}
+        aria-label={`Change language for ${label}, currently ${getLangShortLabel(lang)}`}
+        title={`Change language for ${label} (currently ${getLangShortLabel(lang)})`}
       >
-        {lang}
+        {getLangShortLabel(lang)}
         <span className="arrow">▾</span>
       </button>
       <div className="live">
