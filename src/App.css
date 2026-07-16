@@ -494,3 +494,32 @@ input.listening, textarea.listening {
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 2px rgba(15, 118, 110, .15) !important;
 }
+
+.lang-toggle {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--card-2);
+  color: var(--muted);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: border-color .15s, color .15s, background .15s;
+  height: 38px;
+  font-family: inherit;
+}
+
+.lang-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #f0fdfa;
+}
+
+.lang-toggle .arrow {
+  font-size: 10px;
+  opacity: 0.7;
+}
