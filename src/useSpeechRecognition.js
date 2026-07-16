@@ -101,15 +101,29 @@ export function useSpeechRecognition({ lang, long = false, onResult, onError, on
 
     rec.onresult = (event) => {
       let interimChunk = '';
-      finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      let localFinalTranscript = '';
+      for (let i = 0; i < event.results.length; i++) {
         const tr = event.results[i][0].transcript;
-        if (event.results[i].isFinal) finalTranscript += tr + ' ';
-        else interimChunk += tr;
+        if (event.results[i].isFinal) {
+          localFinalTranscript += tr + ' ';
+        } else {
+          interimChunk += tr;
+        }
       }
-      finalTranscript = finalTranscript.trim();
-      lastInterim = interimChunk;
-      setInterim(finalTranscript || interimChunk);
+
+      const newFinal = localFinalTranscript.trim();
+      const finalChanged = newFinal !== finalTranscript;
+      finalTranscript = newFinal;
+
+      if (finalChanged) {
+        lastInterim = '';
+      }
+
+      if (interimChunk.trim()) {
+        lastInterim = interimChunk;
+      }
+
+      setInterim((finalTranscript + ' ' + lastInterim).trim());
 
       if (long) {
         clearTimeout(silenceTimer);
@@ -133,7 +147,7 @@ export function useSpeechRecognition({ lang, long = false, onResult, onError, on
       // When rec.stop() is called (e.g. by the silence timer), the recognizer
       // may fire onend WITHOUT finalizing the last interim result. Fall back
       // to lastInterim so the user's speech isn't dropped on the floor.
-      const transcript = (finalTranscript || lastInterim).trim();
+      const transcript = (finalTranscript + ' ' + lastInterim).trim();
       if (transcript) {
         onResultRef.current?.(transcript, { elapsedSec, lang });
       } else {

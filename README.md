@@ -67,12 +67,13 @@ for word boundaries on Indic text.
 ### Why the hook remembers `lastInterim`
 When `rec.stop()` is called (e.g. by the silence timer or the user clicking
 the mic again), the Web Speech API fires `onend` **without finalizing the
-last interim result**. If we only relied on `finalTranscript` (which is only
-populated when `isFinal: true` chunks arrive), short utterances like
-*"my name is Arjun"* could show the text in red in the live transcript but
-never reach the parser. The hook now keeps `lastInterim` and falls back to
-it in `onend` when `finalTranscript` is empty. See the regression test in
-`src/useSpeechRecognition.test.js` named *REGRESSION: falls back to lastInterim…*.
+last interim result**, and may also fire an empty/reset `onresult` event. 
+
+To preserve the user's speech:
+1. **Looping all results**: The hook processes the entire `event.results` array from `0` to build `finalTranscript` and `interimChunk`, ensuring no previously finalized speech is lost.
+2. **Preventing empty overwrites**: The hook updates `lastInterim` only when the new interim chunk is non-empty, and clears it only when `finalTranscript` actually changes.
+3. **Combining transcripts**: The final transcript is computed by concatenating `finalTranscript` and `lastInterim` rather than choosing one or the other, as both can coexist in continuous mode.
+See the regression tests in `src/useSpeechRecognition.test.js`.
 
 ## Tests
 

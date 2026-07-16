@@ -101,6 +101,34 @@ describe('useSpeechRecognition', () => {
     expect(onResult.mock.calls[0][0]).toBe('my name is arjun');
   });
 
+  it('falls back to lastInterim even if an empty interim result is received right before onend', () => {
+    const onResult = vi.fn();
+    const { result } = renderHook(() =>
+      useSpeechRecognition({ lang: 'en-US', onResult, long: true })
+    );
+
+    act(() => result.current.start());
+    expect(mockSR).not.toBeNull();
+    act(() => mockSR.onstart?.());
+
+    // Interim result
+    act(() => mockSR.onresult?.(makeResultEvent('my name is arjun', false)));
+
+    // Empty interim result (simulating Chrome stopping and firing onresult with empty interim chunk)
+    act(() => mockSR.onresult?.({
+      resultIndex: 0,
+      results: []
+    }));
+
+    // onend fires
+    act(() => {
+      mockSR.onend?.();
+    });
+
+    expect(onResult).toHaveBeenCalledTimes(1);
+    expect(onResult.mock.calls[0][0]).toBe('my name is arjun');
+  });
+
   it('uses the finalized transcript when present', () => {
     const onResult = vi.fn();
     const { result } = renderHook(() =>
