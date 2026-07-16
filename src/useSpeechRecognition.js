@@ -19,6 +19,13 @@ const SR = typeof window !== 'undefined'
 
 export const isSpeechSupported = !!SR;
 
+/** Lazily resolve the SpeechRecognition constructor (re-reads window at call time
+ *  so tests can swap the global). Returns null if unsupported. */
+function getSR() {
+  if (typeof window === 'undefined') return null;
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
 /**
  * useSpeechRecognition — wraps the Web Speech API in a React hook.
  *
@@ -49,19 +56,24 @@ export function useSpeechRecognition({ lang, long = false, onResult, onError, on
   }, []);
 
   const start = useCallback(() => {
-    if (!SR) {
+    const Ctor = getSR();
+    if (!Ctor) {
       onErrorRef.current?.({ error: 'not-supported' });
       return;
     }
     stopActive();   // spec: only one recognizer at a time
 
-    const rec = new SR();
+    const rec = new Ctor();
     rec.lang = lang;
     rec.interimResults = true;
     rec.continuous = !!long;
     rec.maxAlternatives = 1;
 
     let finalTranscript = '';
+    let lastInterim = '';   // remember the most recent interim; when rec.stop() is
+                            // called (e.g. by the silence timer) the recognizer
+                            // may fire onend WITHOUT finalizing the last interim,
+                            // so we fall back to it.
     let silenceTimer = null;
     let hardStopTimer = null;
     let elapsedTimer = null;
@@ -96,6 +108,7 @@ export function useSpeechRecognition({ lang, long = false, onResult, onError, on
         else interimChunk += tr;
       }
       finalTranscript = finalTranscript.trim();
+      lastInterim = interimChunk;
       setInterim(finalTranscript || interimChunk);
 
       if (long) {
@@ -117,8 +130,12 @@ export function useSpeechRecognition({ lang, long = false, onResult, onError, on
       setElapsed(0);
       if (activeRecognizer === rec) activeRecognizer = null;
 
-      if (finalTranscript) {
-        onResultRef.current?.(finalTranscript, { elapsedSec, lang });
+      // When rec.stop() is called (e.g. by the silence timer), the recognizer
+      // may fire onend WITHOUT finalizing the last interim result. Fall back
+      // to lastInterim so the user's speech isn't dropped on the floor.
+      const transcript = (finalTranscript || lastInterim).trim();
+      if (transcript) {
+        onResultRef.current?.(transcript, { elapsedSec, lang });
       } else {
         onStatusRef.current?.('No speech detected.');
       }
