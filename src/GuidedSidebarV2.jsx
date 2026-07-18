@@ -374,6 +374,12 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
     setCountdownType(null);
   };
 
+  const handleEditIntent = () => {
+    // Cancel active countdown immediately on focus/click (user intent to edit)
+    setCountdown(null);
+    setCountdownType(null);
+  };
+
   const handleGoBackAndRedo = () => {
     if (!previousFieldData) return;
 
@@ -496,6 +502,8 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
                   rows={3}
                   value={tempTranscript}
                   onChange={(e) => handleTextEdit(e.target.value)}
+                  onFocus={handleEditIntent}
+                  onClick={handleEditIntent}
                   placeholder="Type or speak to edit…"
                 />
               ) : (
@@ -505,6 +513,8 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
                   className="guided-input-edit"
                   value={tempTranscript}
                   onChange={(e) => handleTextEdit(e.target.value)}
+                  onFocus={handleEditIntent}
+                  onClick={handleEditIntent}
                   placeholder="Type or speak to edit…"
                 />
               )}
