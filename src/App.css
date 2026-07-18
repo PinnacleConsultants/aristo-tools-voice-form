@@ -523,3 +523,110 @@ input.listening, textarea.listening {
   font-size: 10px;
   opacity: 0.7;
 }
+
+/* Guided Sidebar V2 Countdown and required badges */
+.guided-countdown-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.guided-countdown-badge.advance {
+  background: rgba(5, 150, 105, 0.12);
+  color: var(--ok);
+  animation: pulse-countdown-ok 1s infinite alternate;
+}
+
+.guided-countdown-badge.skip {
+  background: rgba(71, 85, 105, 0.12);
+  color: var(--muted);
+}
+
+@keyframes pulse-countdown-ok {
+  from { box-shadow: 0 0 0 0px rgba(5, 150, 105, 0.2); }
+  to { box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.3); }
+}
+
+.guided-required-badge {
+  display: inline-block;
+  background: rgba(190, 18, 60, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(190, 18, 60, 0.2);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-left: 8px;
+  vertical-align: middle;
+  letter-spacing: 0.05em;
+}
+
+.guided-warning-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(190, 18, 60, 0.05);
+  border: 1px solid rgba(190, 18, 60, 0.15);
+  color: var(--danger);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* Guided Sidebar V2 Footer & Back panel */
+.guided-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.guided-prev-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 70%;
+  text-align: left;
+}
+
+.guided-prev-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.guided-prev-val {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-guided-back {
+  font-size: 12px;
+  padding: 6px 10px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--card-2);
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.btn-guided-back:hover {
+  background: var(--card);
+  color: var(--accent);
+  border-color: var(--accent);
+}

@@ -5,7 +5,7 @@ import { SmartFillButton } from './SmartFillButton';
 import { DEFAULT_LANG, nextLang, resolveLang } from './languages';
 import { cleanName, parseAge, parseWeight, cleanAddress } from './parsers';
 import { isSpeechSupported } from './useSpeechRecognition';
-import { GuidedSidebar } from './GuidedSidebar';
+import { GuidedSidebarV2 } from './GuidedSidebarV2';
 import './App.css';
 
 const INITIAL_FIELDS = { name: '', age: '', weight: '', address: '' };
@@ -155,7 +155,7 @@ export default function App() {
           <div className={`status ${status.kind}`}>{status.msg}</div>
         </div>
 
-        <GuidedSidebar
+        <GuidedSidebarV2
           langFor={langFor}
           onChange={setField}
           onActiveChange={setGuidedActive}
