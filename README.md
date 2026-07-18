@@ -78,7 +78,7 @@ Google's Web Speech API returns Indic number-words as digits across all supporte
 
 ### 1. SpeechRecognition Stop/Start Race Condition (Redo Bug)
 Calling `.start()` on a new `SpeechRecognition` instance immediately after calling `.stop()` on an active instance triggers a synchronous `DOMException` error (`recognition has already started`). This happens because the browser's speech recognition engine is asynchronously shutting down the active recording session and releasing the device.
-* **Fix**: Refactored `stopActive` in [useSpeechRecognition.js](file:///d:/Code/iitm_midas/github/voice-form/src/useSpeechRecognition.js) to be callback-based. The hook now intercepts the active recognizer's `onend` event, ensuring the previous session has fully closed before launching the new session.
+* **Fix**: Refactored `stopActive` in [useSpeechRecognition.js](src/useSpeechRecognition.js) to be callback-based. The hook now intercepts the active recognizer's `onend` event, ensuring the previous session has fully closed before launching the new session.
 
 ### 2. SpeechSynthesis Voice Matching (Multi-Language TTS)
 Setting the `lang` property on a `SpeechSynthesisUtterance` is not sufficient in Chrome/Edge, which defaults to the system's English voice engine and pronounces non-English text as garbled English sounds (or remains silent).
