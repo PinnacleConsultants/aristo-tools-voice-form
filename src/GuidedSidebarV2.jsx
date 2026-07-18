@@ -244,7 +244,15 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
     // Stop mic before speaking or starting
     stop();
 
-    const questionText = getLocalizedQuestion(currentStep.id, currentLang);
+    // Check if the browser actually has a voice loaded for this language code
+    const voices = typeof window !== 'undefined' && window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    const normalize = (l) => l.replace('_', '-').toLowerCase();
+    const target = normalize(currentLang);
+    const hasVoice = voices.some(v => normalize(v.lang) === target || normalize(v.lang).startsWith(target.split('-')[0]));
+
+    // Fallback to English text and English voice if target language voice is missing
+    const speakLang = hasVoice ? currentLang : 'en-IN';
+    const questionText = getLocalizedQuestion(currentStep.id, speakLang);
 
     if (isMuted) {
       setIsSpeaking(false);
@@ -256,7 +264,7 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
     } else {
       setIsSpeaking(true);
       const speechTimeout = setTimeout(() => {
-        speakText(questionText, currentLang, () => {
+        speakText(questionText, speakLang, () => {
           setIsSpeaking(false);
           start();
         });
