@@ -41,7 +41,25 @@ const STEPS = [
   },
 ];
 
-export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
+function speakText(text, onEndCallback) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) {
+    onEndCallback?.();
+    return;
+  }
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.onend = () => {
+    onEndCallback?.();
+  };
+  utterance.onerror = () => {
+    onEndCallback?.();
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit }) {
   const [isActive, setIsActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [tempTranscript, setTempTranscript] = useState('');
@@ -49,6 +67,7 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
   
   const [countdown, setCountdown] = useState(null);
   const [countdownType, setCountdownType] = useState(null); // 'advance' or 'skip'
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const currentStep = STEPS[currentStepIndex];
   const currentLang = langFor(currentStep.id);
@@ -57,6 +76,35 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
     lang: currentLang,
     long: currentStep.long,
     onResult: (text) => {
+      const cleanText = text.trim().toLowerCase().replace(/[.,!?]$/, '');
+      
+      // Standalone Voice Commands for Hands-Free control
+      if (cleanText === 'next' || cleanText === 'accept') {
+        if (tempTranscript.trim()) {
+          handleAccept();
+        }
+        return;
+      }
+      if (cleanText === 'redo' || cleanText === 'retry') {
+        handleRedo();
+        return;
+      }
+      if (cleanText === 'skip') {
+        if (!currentStep.required) {
+          handleSkip();
+        }
+        return;
+      }
+      if (cleanText === 'back') {
+        handleGoBackAndRedo();
+        return;
+      }
+      if (cleanText === 'exit' || cleanText === 'stop') {
+        handleExit();
+        return;
+      }
+
+      // Parse normally if it's not a control command
       const parsed = currentStep.parser ? currentStep.parser(text) : text;
       setTempTranscript(parsed);
     },
@@ -64,23 +112,46 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
     onStatus: (msg) => console.log('Guided V2 mic status:', msg),
   });
 
-  // Automatically start the mic when guided mode is activated or step changes
+  // Read question aloud when guided mode starts or step changes
   useEffect(() => {
-    if (isActive) {
-      start();
-    } else {
-      stop();
+    if (!isActive) {
+      setIsSpeaking(false);
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      return;
     }
-  }, [isActive, currentStepIndex, start, stop]);
+
+    // Stop mic before speaking so it doesn't hear itself
+    stop();
+    setIsSpeaking(true);
+
+    const questionText = `What is your ${currentStep.key}?`;
+    
+    const speechTimeout = setTimeout(() => {
+      speakText(questionText, () => {
+        setIsSpeaking(false);
+        // Start listening after speaking finishes
+        start();
+      });
+    }, 150);
+
+    return () => {
+      clearTimeout(speechTimeout);
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isActive, currentStepIndex]);
 
   // Synchronize active state with parent to disable/dim standard mic buttons
   useEffect(() => {
     onActiveChange?.(isActive);
   }, [isActive, onActiveChange]);
 
-  // Auto-advance / auto-skip triggers when listening finishes
+  // Auto-advance / auto-skip triggers when listening finishes (excluding TTS speaking phase)
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive || isSpeaking) return;
 
     if (isListening) {
       setCountdown(null);
@@ -105,7 +176,7 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
         setCountdownType('skip');
       }
     }
-  }, [isListening, isActive, currentStepIndex]);
+  }, [isListening, isActive, currentStepIndex, isSpeaking]);
 
   // Countdown timer tick effect
   useEffect(() => {
@@ -154,6 +225,7 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
       setCurrentStepIndex(prev => prev + 1);
     } else {
       setIsActive(false);
+      onSubmit?.(finalVal);
     }
   };
 
@@ -172,6 +244,7 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
       setCurrentStepIndex(prev => prev + 1);
     } else {
       setIsActive(false);
+      onSubmit?.('');
     }
   };
 
@@ -238,7 +311,11 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
       <div className="guided-header">
         <span className="guided-step">Step {currentStepIndex + 1} of {STEPS.length}</span>
         
-        {countdown !== null ? (
+        {isSpeaking ? (
+          <div className="guided-status-indicator speaking">
+            Speaking Question…
+          </div>
+        ) : countdown !== null ? (
           <div className={`guided-countdown-badge ${countdownType}`}>
             {countdownType === 'advance' ? `Advancing in ${countdown}s` : `Skipping in ${countdown}s`}
           </div>
@@ -262,7 +339,11 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
       </div>
 
       <div className="guided-transcript-area">
-        {isListening ? (
+        {isSpeaking ? (
+          <div className="guided-live speaking-placeholder" style={{ opacity: 0.6, fontStyle: 'italic', textAlign: 'center', width: '100%' }}>
+            Speaking question aloud…
+          </div>
+        ) : isListening ? (
           <div className="guided-live listening">
             <span className="tag">…</span>
             {interim || <span className="listening-placeholder">Speak now…</span>}
@@ -294,7 +375,7 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange }) {
         )}
       </div>
 
-      {countdown === null && !isListening && !tempTranscript && currentStep.required && (
+      {countdown === null && !isListening && !tempTranscript && currentStep.required && !isSpeaking && (
         <div className="guided-warning-msg">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
