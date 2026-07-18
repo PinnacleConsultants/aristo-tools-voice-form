@@ -630,3 +630,74 @@ input.listening, textarea.listening {
   color: var(--accent);
   border-color: var(--accent);
 }
+
+.btn-mute-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn-mute-toggle:hover {
+  background: var(--card-2);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-mute-toggle.muted {
+  background: rgba(190, 18, 60, 0.05);
+  color: var(--danger);
+  border-color: rgba(190, 18, 60, 0.2);
+}
+
+.btn-mute-toggle.muted:hover {
+  background: rgba(190, 18, 60, 0.1);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.guided-status-indicator.speaking {
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+}
+
+/* Soundwave Visualizer */
+.soundwave-visualizer {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.soundwave-bar {
+  width: 2px;
+  height: 100%;
+  background-color: var(--accent);
+  border-radius: 99px;
+  animation: bounce-wave 0.6s ease-in-out infinite alternate;
+  transform-origin: bottom;
+}
+
+.soundwave-bar:nth-child(1) { animation-delay: 0.1s; }
+.soundwave-bar:nth-child(2) { animation-delay: 0.2s; }
+.soundwave-bar:nth-child(3) { animation-delay: 0.3s; }
+.soundwave-bar:nth-child(4) { animation-delay: 0.4s; }
+.soundwave-bar:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes bounce-wave {
+  0% { transform: scaleY(0.2); }
+  100% { transform: scaleY(1.0); }
+}
