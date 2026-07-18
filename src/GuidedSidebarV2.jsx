@@ -76,6 +76,11 @@ const LOCALIZED_QUESTIONS = {
   }
 };
 
+// Pre-warm SpeechSynthesis voices
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+}
+
 function speakText(text, lang, onEndCallback) {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
     onEndCallback?.();
@@ -87,10 +92,29 @@ function speakText(text, lang, onEndCallback) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
   
+  // Find a native browser voice matching the target language code
+  const voices = window.speechSynthesis.getVoices();
+  const normalize = (l) => l.replace('_', '-').toLowerCase();
+  const target = normalize(lang);
+  
+  let matchedVoice = voices.find(v => normalize(v.lang) === target);
+  if (!matchedVoice) {
+    const base = target.split('-')[0];
+    matchedVoice = voices.find(v => normalize(v.lang).startsWith(base));
+  }
+  
+  if (matchedVoice) {
+    utterance.voice = matchedVoice;
+    console.log(`Selected TTS voice: ${matchedVoice.name} (${matchedVoice.lang})`);
+  } else {
+    console.warn(`No TTS voice found for lang: ${lang}, falling back to system default.`);
+  }
+
   utterance.onend = () => {
     onEndCallback?.();
   };
-  utterance.onerror = () => {
+  utterance.onerror = (e) => {
+    console.error('SpeechSynthesis error:', e);
     onEndCallback?.();
   };
   window.speechSynthesis.speak(utterance);
