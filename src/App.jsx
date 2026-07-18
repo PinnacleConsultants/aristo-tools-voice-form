@@ -45,24 +45,6 @@ export default function App() {
     }));
   }, []);
 
-  const handleGuidedSubmit = useCallback((finalAddressVal) => {
-    setFields(prev => {
-      const updatedFields = {
-        ...prev,
-        address: finalAddressVal
-      };
-      const data = {
-        name: updatedFields.name.trim(),
-        age: updatedFields.age.trim(),
-        weight: updatedFields.weight.trim(),
-        address: updatedFields.address.trim(),
-      };
-      console.log('Submitted (Guided V2 Auto-Submit):', data);
-      setStatusMsg(`Submitted: ${JSON.stringify(data)}`, 'ok');
-      return updatedFields;
-    });
-  }, [setStatusMsg]);
-
   const langFor = (fieldId) => resolveLang(fieldLang, defaultLang, fieldId);
 
   return (
@@ -177,7 +159,6 @@ export default function App() {
           langFor={langFor}
           onChange={setField}
           onActiveChange={setGuidedActive}
-          onSubmit={handleGuidedSubmit}
         />
       </div>
 

@@ -6,10 +6,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * starting a new one (the Web Speech API spec enforces this).
  */
 let activeRecognizer = null;
-function stopActive() {
+function stopActive(callback) {
   if (activeRecognizer) {
-    try { activeRecognizer.stop(); } catch { /* noop */ }
+    const rec = activeRecognizer;
+    const prevOnEnd = rec.onend;
+    rec.onend = () => {
+      if (prevOnEnd) {
+        try { prevOnEnd(); } catch (e) { /* noop */ }
+      }
+      callback?.();
+    };
+    try {
+      rec.stop();
+    } catch (e) {
+      callback?.();
+    }
     activeRecognizer = null;
+  } else {
+    callback?.();
   }
 }
 
@@ -61,105 +75,105 @@ export function useSpeechRecognition({ lang, long = false, onResult, onError, on
       onErrorRef.current?.({ error: 'not-supported' });
       return;
     }
-    stopActive();   // spec: only one recognizer at a time
+    stopActive(() => {
+      const rec = new Ctor();
+      rec.lang = lang;
+      rec.interimResults = true;
+      rec.continuous = !!long;
+      rec.maxAlternatives = 1;
 
-    const rec = new Ctor();
-    rec.lang = lang;
-    rec.interimResults = true;
-    rec.continuous = !!long;
-    rec.maxAlternatives = 1;
+      let finalTranscript = '';
+      let lastInterim = '';   // remember the most recent interim; when rec.stop() is
+                              // called (e.g. by the silence timer) the recognizer
+                              // may fire onend WITHOUT finalizing the last interim,
+                              // so we fall back to it.
+      let silenceTimer = null;
+      let hardStopTimer = null;
+      let elapsedTimer = null;
+      let elapsedSec = 0;
 
-    let finalTranscript = '';
-    let lastInterim = '';   // remember the most recent interim; when rec.stop() is
-                            // called (e.g. by the silence timer) the recognizer
-                            // may fire onend WITHOUT finalizing the last interim,
-                            // so we fall back to it.
-    let silenceTimer = null;
-    let hardStopTimer = null;
-    let elapsedTimer = null;
-    let elapsedSec = 0;
+      const SILENCE_MS = 3000;
+      const HARD_MAX_MS = 60000;
 
-    const SILENCE_MS = 3000;
-    const HARD_MAX_MS = 60000;
+      rec.onstart = () => {
+        activeRecognizer = rec;
+        setIsListening(true);
+        setInterim('');
+        onStatusRef.current?.(long ? `Listening (long mode, ${lang})…` : `Listening (${lang})…`);
 
-    rec.onstart = () => {
-      activeRecognizer = rec;
-      setIsListening(true);
-      setInterim('');
-      onStatusRef.current?.(long ? `Listening (long mode, ${lang})…` : `Listening (${lang})…`);
-
-      if (long) {
-        elapsedSec = 0;
-        setElapsed(0);
-        elapsedTimer = setInterval(() => {
-          elapsedSec += 1;
-          setElapsed(elapsedSec);
-        }, 1000);
-        hardStopTimer = setTimeout(() => rec.stop(), HARD_MAX_MS);
-      }
-    };
-
-    rec.onresult = (event) => {
-      let interimChunk = '';
-      let localFinalTranscript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        const tr = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          localFinalTranscript += tr + ' ';
-        } else {
-          interimChunk += tr;
+        if (long) {
+          elapsedSec = 0;
+          setElapsed(0);
+          elapsedTimer = setInterval(() => {
+            elapsedSec += 1;
+            setElapsed(elapsedSec);
+          }, 1000);
+          hardStopTimer = setTimeout(() => rec.stop(), HARD_MAX_MS);
         }
-      }
+      };
 
-      const newFinal = localFinalTranscript.trim();
-      const finalChanged = newFinal !== finalTranscript;
-      finalTranscript = newFinal;
+      rec.onresult = (event) => {
+        let interimChunk = '';
+        let localFinalTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const tr = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            localFinalTranscript += tr + ' ';
+          } else {
+            interimChunk += tr;
+          }
+        }
 
-      if (finalChanged) {
-        lastInterim = '';
-      }
+        const newFinal = localFinalTranscript.trim();
+        const finalChanged = newFinal !== finalTranscript;
+        finalTranscript = newFinal;
 
-      if (interimChunk.trim()) {
-        lastInterim = interimChunk;
-      }
+        if (finalChanged) {
+          lastInterim = '';
+        }
 
-      setInterim((finalTranscript + ' ' + lastInterim).trim());
+        if (interimChunk.trim()) {
+          lastInterim = interimChunk;
+        }
 
-      if (long) {
+        setInterim((finalTranscript + ' ' + lastInterim).trim());
+
+        if (long) {
+          clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => rec.stop(), SILENCE_MS);
+        }
+      };
+
+      rec.onerror = (e) => {
+        onErrorRef.current?.(e);
+      };
+
+      rec.onend = () => {
         clearTimeout(silenceTimer);
-        silenceTimer = setTimeout(() => rec.stop(), SILENCE_MS);
+        clearTimeout(hardStopTimer);
+        clearInterval(elapsedTimer);
+        setIsListening(false);
+        setInterim('');
+        setElapsed(0);
+        if (activeRecognizer === rec) activeRecognizer = null;
+
+        // When rec.stop() is called (e.g. by the silence timer), the recognizer
+        // may fire onend WITHOUT finalizing the last interim result. Fall back
+        // to lastInterim so the user's speech isn't dropped on the floor.
+        const transcript = (finalTranscript + ' ' + lastInterim).trim();
+        if (transcript) {
+          onResultRef.current?.(transcript, { elapsedSec, lang });
+        } else {
+          onStatusRef.current?.('No speech detected.');
+        }
+      };
+
+      try {
+        rec.start();
+      } catch (e) {
+        onErrorRef.current?.({ error: 'start-failed', message: e.message });
       }
-    };
-
-    rec.onerror = (e) => {
-      onErrorRef.current?.(e);
-    };
-
-    rec.onend = () => {
-      clearTimeout(silenceTimer);
-      clearTimeout(hardStopTimer);
-      clearInterval(elapsedTimer);
-      setIsListening(false);
-      setInterim('');
-      setElapsed(0);
-      if (activeRecognizer === rec) activeRecognizer = null;
-
-      // When rec.stop() is called (e.g. by the silence timer), the recognizer
-      // may fire onend WITHOUT finalizing the last interim result. Fall back
-      // to lastInterim so the user's speech isn't dropped on the floor.
-      const transcript = (finalTranscript + ' ' + lastInterim).trim();
-      if (transcript) {
-        onResultRef.current?.(transcript, { elapsedSec, lang });
-      } else {
-        onStatusRef.current?.('No speech detected.');
-      }
-    };
-
-    try {
-      rec.start();
-    } catch (e) {
-      onErrorRef.current?.({ error: 'start-failed', message: e.message });
-    }
+    });
   }, [lang, long]);
 
   // Cleanup on unmount

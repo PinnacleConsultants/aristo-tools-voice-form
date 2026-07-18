@@ -225,7 +225,6 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
       setCurrentStepIndex(prev => prev + 1);
     } else {
       setIsActive(false);
-      onSubmit?.(finalVal);
     }
   };
 
@@ -244,7 +243,6 @@ export function GuidedSidebarV2({ langFor, onChange, onActiveChange, onSubmit })
       setCurrentStepIndex(prev => prev + 1);
     } else {
       setIsActive(false);
-      onSubmit?.('');
     }
   };
 
