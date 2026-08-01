@@ -15,13 +15,15 @@ npm test             # run all tests
 
 For the OP Visit flow, copy `.env.example` to `.env` and add the server-side
 `SARVAM_API_KEY` and comma-separated `GROQ_API_KEYS`. These values are read only
-by Node and are never exposed to the browser. Run the two POC processes in
-separate terminals:
+by Node and are never exposed to the browser. The recommended one-command
+workflow starts both POC processes:
 
 ```bash
-npm run dev          # terminal 1: Vite client
-npm run dev:server   # terminal 2: Node API on PORT (default 8787)
+npm run dev          # Vite client + Node API
 ```
+
+If you prefer separate terminals, use `npm run dev:client` and
+`npm run dev:server`. The API listens on `PORT` (default `8787`).
 
 Select `OP Visit POC` at the top of the existing intake page. Browser recognition
 is selected by default. Sarvam mode records a WebM clip, sends it to
