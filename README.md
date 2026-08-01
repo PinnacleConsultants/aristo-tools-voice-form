@@ -1,15 +1,32 @@
 # Voice Form — React POC
 
-A small React port of the single-page voice form. The goal is a **reference implementation** showing how the Web Speech API integrates into a component-based UI, with the field-parsing logic isolated as pure functions for easy reuse.
+A small React reference implementation for voice-assisted clinical form filling. It contains the original browser speech demos and a separate OP Visit experiment that combines speech recognition, server-side transcription, structured extraction, and human review.
+
+The API helper uses Node 18+ built-in `fetch`, `FormData`, and `Blob` APIs.
 
 ## Quick start
 
 ```bash
 cd voice-form-react
 npm install
-npm run dev          # http://localhost:5173
-npm test             # run the parser test suite
+npm run dev          # UI http://localhost:5173
+npm test             # run all tests
 ```
+
+For the OP Visit flow, copy `.env.example` to `.env` and add the server-side
+`SARVAM_API_KEY` and comma-separated `GROQ_API_KEYS`. These values are read only
+by Node and are never exposed to the browser. Run the two POC processes in
+separate terminals:
+
+```bash
+npm run dev          # terminal 1: Vite client
+npm run dev:server   # terminal 2: Node API on PORT (default 8787)
+```
+
+Select `OP Visit POC` at the top of the existing intake page. Browser recognition
+is selected by default. Sarvam mode records a WebM clip, sends it to
+`/api/op-visit/process`, and then sends the transcript through Groq. Suggestions
+are editable and must be reviewed before they are applied to the form.
 
 ## File layout (the parts that matter)
 
@@ -24,12 +41,57 @@ src/
 ├── parsers.js                    # ★ pure functions: cleanName, parseAge, parseWeight, cleanAddress, smartParse
 ├── useSpeechRecognition.js       # ★ custom hook wrapping the Web Speech API
 └── parsers.test.js               # Vitest tests for parsers.js and useSpeechRecognition.js
+server/
+├── index.js                       # small Node HTTP server entry point
+├── app.js                         # Sarvam/Groq orchestration and API handler
+├── visitSchema.js                 # extraction schema + response normalization
+├── keyPool.js                     # round-robin Groq key retry logic
+└── *.test.js                      # API/schema/key-pool tests
 ```
 
 The files most likely to be lifted into the real app:
 - **`src/parsers.js`** — pure functions, no DOM, no React, no globals. Drop into any JS codebase.
 - **`src/useSpeechRecognition.js`** — React hook; copy and adapt props as needed.
 - **`src/GuidedSidebarV2.jsx`** — Guided conversational wizard with automated flows.
+
+The OP Visit page intentionally reuses `useSpeechRecognition.js` for Browser
+mode. Its table controls and review panel are specific to the OP Visit schema,
+so they are kept separate from the small `VoiceField` used by the original demo.
+
+## OP Visit POC architecture
+
+1. Browser recognition produces a transcript directly in the browser, or Sarvam
+   mode records WebM audio and sends it as JSON/base64 to the local API.
+2. The API calls Sarvam when audio is supplied, then calls Groq with a strict
+   OP Visit JSON Schema.
+3. The UI displays the transcript and editable suggestions. Nothing changes in
+   the form until the user clicks `Apply selected`.
+4. The page remains local-only and provides `Reset` and `Copy JSON`; it does not
+   persist or submit clinical data.
+
+The API server exists because this repository is a Vite-only POC and provider
+keys must not be placed in browser code. It is deliberately small and uses
+Node's built-in HTTP server, `fetch`, and `FormData`; it does not require
+Express or a multipart middleware. In the actual clinical application, this
+server may not be needed: move the provider calls into the application's
+existing backend/API route, server action, or service layer and keep only the
+client-side recording/review flow from this reference.
+
+### Environment
+
+`.env.example` documents the supported variables:
+
+```text
+SARVAM_API_KEY=...
+GROQ_API_KEYS=key_one,key_two
+GROQ_MODEL=openai/gpt-oss-20b
+PORT=8787
+```
+
+The key pool starts each request at the next key in circular order and moves to
+the next key for rate-limit, authentication, timeout, network, or server errors.
+It gives up after trying each configured key once. Client/schema errors are not
+retried.
 
 ---
 
@@ -100,12 +162,14 @@ See the regression tests in `src/useSpeechRecognition.test.js`.
 
 ## Tests
 
-`npm test` runs parser and hook tests covering:
+`npm test` runs parser, hook, API, schema, and key-pool tests covering:
 - English, Hindi, Marathi name extraction
 - Age clamping (0–130)
 - Pound → kg conversion
 - Address normalisation
 - Smart-parse routing
 - Speech recognition hook lastInterim fallbacks
+- transcript and empty-request API behavior
+- numeric/list normalization and Groq key rotation
 
-25 tests, all passing.
+35 tests, all passing at the time of this update.

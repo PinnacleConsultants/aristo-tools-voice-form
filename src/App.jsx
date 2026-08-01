@@ -6,6 +6,7 @@ import { DEFAULT_LANG, nextLang, resolveLang } from './languages';
 import { cleanName, parseAge, parseWeight, cleanAddress } from './parsers';
 import { isSpeechSupported } from './useSpeechRecognition';
 import { GuidedSidebarV2 } from './GuidedSidebarV2';
+import { OpVisitPage } from './OpVisitPage';
 import './App.css';
 
 const INITIAL_FIELDS = { name: '', age: '', weight: '', address: '' };
@@ -16,6 +17,7 @@ export default function App() {
   const [fields, setFields] = useState(INITIAL_FIELDS);
   const [status, setStatus] = useState({ msg: 'Ready.', kind: '' });
   const [guidedActive, setGuidedActive] = useState(false);
+  const [page, setPage] = useState('intake');
 
   const setStatusMsg = useCallback((msg, kind = '') => {
     setStatus({ msg, kind });
@@ -47,8 +49,25 @@ export default function App() {
 
   const langFor = (fieldId) => resolveLang(fieldLang, defaultLang, fieldId);
 
+  if (page === 'op-visit') {
+    return (
+      <>
+        <div className="app-switch op-switch">
+          <button type="button" className="active" onClick={() => setPage('op-visit')}>OP Visit POC</button>
+          <button type="button" onClick={() => setPage('intake')}>Clinical Voice Intake</button>
+        </div>
+        <OpVisitPage />
+      </>
+    );
+  }
+
   return (
-    <div className="wrap">
+    <>
+      <div className="app-switch">
+        <button type="button" onClick={() => setPage('op-visit')}>OP Visit POC</button>
+        <button type="button" className="active" onClick={() => setPage('intake')}>Clinical Voice Intake</button>
+      </div>
+      <div className="wrap">
       <header>
         <h1 style={{ display: 'flex', alignItems: 'center' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="clinical-icon" style={{ width: 28, height: 28, color: 'var(--accent)', marginRight: 10 }}>
@@ -178,6 +197,7 @@ export default function App() {
           Your browser doesn't support the Web Speech API. Try Chrome, Edge, or Safari. (Firefox does not support SpeechRecognition yet.)
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
