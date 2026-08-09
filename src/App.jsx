@@ -7,6 +7,7 @@ import { cleanName, parseAge, parseWeight, cleanAddress } from './parsers';
 import { isSpeechSupported } from './useSpeechRecognition';
 import { GuidedSidebarV2 } from './GuidedSidebarV2';
 import { OpVisitPage } from './OpVisitPage';
+import { ClinicalTrialsPage } from './ClinicalTrialsPage';
 import './App.css';
 
 const INITIAL_FIELDS = { name: '', age: '', weight: '', address: '' };
@@ -54,9 +55,23 @@ export default function App() {
       <>
         <div className="app-switch op-switch">
           <button type="button" className="active" onClick={() => setPage('op-visit')}>OP Visit POC</button>
+          <button type="button" onClick={() => setPage('clinical-trials')}>Clinical Trials POC</button>
           <button type="button" onClick={() => setPage('intake')}>Clinical Voice Intake</button>
         </div>
         <OpVisitPage />
+      </>
+    );
+  }
+
+  if (page === 'clinical-trials') {
+    return (
+      <>
+        <div className="app-switch op-switch">
+          <button type="button" onClick={() => setPage('op-visit')}>OP Visit POC</button>
+          <button type="button" className="active" onClick={() => setPage('clinical-trials')}>Clinical Trials POC</button>
+          <button type="button" onClick={() => setPage('intake')}>Clinical Voice Intake</button>
+        </div>
+        <ClinicalTrialsPage />
       </>
     );
   }
@@ -65,6 +80,7 @@ export default function App() {
     <>
       <div className="app-switch">
         <button type="button" onClick={() => setPage('op-visit')}>OP Visit POC</button>
+        <button type="button" onClick={() => setPage('clinical-trials')}>Clinical Trials POC</button>
         <button type="button" className="active" onClick={() => setPage('intake')}>Clinical Voice Intake</button>
       </div>
       <div className="wrap">

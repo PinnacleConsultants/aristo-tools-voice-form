@@ -1,0 +1,75 @@
+/* Clinical Trials Discovery POC — teal clinical palette (matches App.css / opVisit.css). */
+.ct-page { min-height: 100vh; background: #f4f8f7; color: #183331; padding: 28px clamp(16px, 4vw, 56px) 70px; }
+.ct-header { max-width: 1360px; margin: 0 auto 22px; }
+.ct-header h1 { margin: 5px 0 6px; font-size: clamp(26px, 3vw, 38px); letter-spacing: -.03em; color: #164e4a; }
+.ct-header p { color: #607a76; margin: 0; }
+
+.ct-layout { max-width: 1360px; margin: 0 auto; display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 22px; align-items: start; }
+
+/* ---- Form ---- */
+.ct-form { background: #fff; border: 1px solid #d4e5e1; border-radius: 16px; padding: 22px; box-shadow: 0 9px 24px rgba(21, 79, 74, .06); display: grid; gap: 16px; align-content: start; }
+.ct-field { display: grid; gap: 6px; color: #5d7772; font-size: 11px; font-weight: 700; }
+.ct-field b { color: #b4234b; }
+.ct-field input { border: 1px solid #d7e6e3; background: #fbfdfd; border-radius: 8px; color: #183331; font: inherit; font-size: 14px; padding: 10px 12px; min-width: 0; outline: none; }
+.ct-field input:focus { border-color: #0f766e; box-shadow: 0 0 0 3px rgba(15, 118, 110, .1); }
+
+.ct-biomarker-input { display: flex; gap: 8px; }
+.ct-biomarker-input input { flex: 1; }
+.ct-biomarker-input button { border: 1px solid #0f766e; background: #0f766e; color: #fff; border-radius: 8px; padding: 0 14px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.ct-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ct-chip { display: inline-flex; align-items: center; gap: 6px; background: #edf5f3; color: #0f766e; border: 1px solid #cfe3df; border-radius: 999px; padding: 4px 6px 4px 11px; font-size: 12px; font-weight: 700; }
+.ct-chip button { border: 0; background: transparent; color: #54716c; font-size: 15px; line-height: 1; cursor: pointer; padding: 0 3px; }
+
+.ct-submit { border: 1px solid #0f766e; background: #0f766e; color: #fff; border-radius: 10px; padding: 12px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.ct-submit:hover { filter: brightness(1.05); }
+.ct-submit:disabled { opacity: .65; cursor: wait; }
+
+.ct-debug { border: 1px dashed #9ac7bf; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #54716c; }
+.ct-debug summary { cursor: pointer; font-weight: 700; }
+.ct-debug pre { margin: 8px 0 0; max-height: 260px; overflow: auto; background: #f6faf9; border-radius: 6px; padding: 10px; font-size: 11px; color: #365a55; white-space: pre-wrap; }
+
+/* ---- Sidebar ---- */
+.ct-sidebar { background: #fff; border: 1px solid #d4e5e1; border-radius: 16px; padding: 20px; box-shadow: 0 9px 24px rgba(21, 79, 74, .06); min-width: 0; }
+.ct-sidebar-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid #e4efed; padding-bottom: 12px; margin-bottom: 14px; }
+.ct-sidebar-head h2 { margin: 0; font-size: 17px; color: #163f3c; }
+.ct-source { color: #8aa39e; font-size: 11px; white-space: nowrap; }
+
+.ct-state { color: #607a76; font-size: 13px; padding: 18px 4px; }
+.ct-error { color: #b4234b; }
+.ct-retry { margin-top: 10px; border: 1px solid #d4e5e1; background: #fff; color: #0f766e; border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+.ct-section { margin-bottom: 18px; }
+.ct-section-toggle { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; padding: 0 0 10px; cursor: pointer; text-align: left; }
+.ct-section-title { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #6a827e; font-weight: 800; flex: 1; }
+.ct-section-count { font-size: 11px; font-weight: 800; color: #0f766e; background: #e6f4f2; border: 1px solid #cfe3df; border-radius: 999px; padding: 2px 9px; }
+.ct-chevron { font-size: 12px; color: #8aa39e; transition: transform .15s ease; }
+.ct-chevron-open { transform: rotate(180deg); }
+.ct-section-body { display: grid; gap: 8px; }
+
+/* ---- Trial card ---- */
+.ct-card { border: 1px solid #e4efed; border-left: 4px solid #9ac7bf; border-radius: 10px; padding: 13px 14px; background: #fbfdfd; }
+.ct-card-title { margin: 0 0 8px; font-size: 13.5px; line-height: 1.4; color: #183331; font-weight: 700; }
+.ct-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ct-status { font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 3px 9px; border-radius: 999px; }
+.ct-status-recruiting { background: #e6f4ea; color: #087443; }
+.ct-status-not_yet_recruiting { background: #fdf3e3; color: #8a5b00; }
+.ct-status-enrolling_by_invitation { background: #e8f0fb; color: #175cd3; }
+.ct-status-active_not_recruiting { background: #e7f5f3; color: #0f766e; }
+.ct-status-completed { background: #eef1f4; color: #475467; }
+.ct-phase { font-size: 11px; color: #54716c; background: #edf5f3; border-radius: 6px; padding: 3px 8px; font-weight: 700; }
+.ct-date { font-size: 11px; color: #607a76; }
+.ct-card-toggle { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: #0f766e; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 8px; }
+.ct-card-toggle:hover { text-decoration: underline; }
+.ct-card-details { border-top: 1px dashed #e4efed; padding-top: 10px; margin-bottom: 10px; }
+.ct-card-desc { margin: 0 0 8px; font-size: 12px; line-height: 1.5; color: #4f6d67; }
+.ct-card-interventions { margin: 0; font-size: 11.5px; color: #54716c; }
+.ct-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #edf3f2; padding-top: 10px; }
+.ct-nct { font-size: 11px; color: #8aa39e; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ct-open { border: 1px solid #0f766e; background: #0f766e; color: #fff; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; text-decoration: none; }
+.ct-open:hover { filter: brightness(1.05); }
+
+.ct-disclaimer { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid #e4efed; color: #8aa39e; font-size: 11px; line-height: 1.5; }
+
+@media (max-width: 900px) {
+  .ct-layout { grid-template-columns: 1fr; }
+}

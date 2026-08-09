@@ -97,6 +97,73 @@ retried.
 
 ---
 
+## Clinical Trials Discovery POC
+
+A third POC that takes a small normalized oncology patient profile and retrieves
+relevant **ongoing** and **recently completed** (past 6 months) cancer trials
+from ClinicalTrials.gov. It validates that the three ARISTO patient inputs —
+primary site, histology, and positive biomarkers — are sufficient to construct
+useful searches and produce a compact, reusable results sidebar.
+
+Select `Clinical Trials POC` at the top of the app. Enter a primary site
+(required), optionally a histology and positive biomarkers, then click
+`Find Clinical Trials`.
+
+### How it works
+
+1. **Normalize** — `Primary site` → `Lung Cancer` (no blind append if the value
+   already carries a cancer type); histology is title-cased; biomarkers are
+   canonicalized via an alias map covering the ARISTO biomarker list
+   (`HER2/neu (FISH)`/`Her2 neu (IHC)` → `HER2`, `Somatic BRCA 2 mutation` →
+   `BRCA2`, `c-KIT` → `KIT`, `p53` → `TP53`, …). Unknown biomarkers fall back
+   to their flattened token, so new markers appearing in the data later are
+   handled without code changes.
+2. **Two searches per level** — active trials (`RECRUITING`,
+   `NOT_YET_RECRUITING`, `ENROLLING_BY_INVITATION`, `ACTIVE_NOT_RECRUITING`) and
+   recently completed trials (`COMPLETED` with a dynamically computed
+   `AREA[CompletionDate]RANGE[today-6mo, today]` filter — never hard-coded).
+3. **Progressive fallback** — level 1 (site + histology + biomarkers) → level 2
+   (site + biomarkers) → level 3 (site + histology) → level 4 (site only), until
+   at least 3 valid results are found.
+4. **Parse, dedupe, validate, rank** — nested `protocolSection` responses are
+   mapped to flat records, records without an NCT ID/title are dropped,
+   duplicates are removed by `nctId`, status/date are re-verified, and results
+   are ranked deterministically (site > histology > biomarker match, then API
+   relevance and recency). Active trials are shown before completed ones, capped
+   at 15.
+5. **Retry** — if a call fails and returns an HTML/non-JSON response (e.g. a
+   proxy or edge error page), it is automatically retried up to 5 times before
+   that call fails for real.
+
+The API needs no authentication or API key and is called directly from the
+browser. The HTTP layer is isolated in `fetchStudies` so it can later be moved
+behind an ARISTO backend endpoint without touching the rest of the module.
+
+### File layout
+
+```
+src/
+├── ClinicalTrialsPage.jsx                 # POC page: form + debug panel + wiring
+└── clinicalTrials/
+    ├── ClinicalTrialsSidebar.jsx         # ★ reusable results sidebar (presentation only)
+    ├── query.js                          # ★ input normalization + query builder (pure)
+    ├── parse.js                          # ★ response parsing + validation (pure)
+    ├── service.js                        # ★ search orchestration, retry, ranking
+    ├── clinicalTrials.css                # styles
+    └── *.test.js                         # Vitest tests
+```
+
+The files most likely to be lifted into the real app:
+- **`src/clinicalTrials/ClinicalTrialsSidebar.jsx`** — accepts normalized trial
+  data only; it knows nothing about the API. Copy it into ARISTO and feed it
+  from the search service using `patient.primary_site`,
+  `patient.histology_description`, and `patient.biomarkers[]` instead of the POC
+  form.
+- **`src/clinicalTrials/query.js` / `parse.js` / `service.js`** — pure logic, no
+  DOM, unit-tested.
+
+---
+
 ## Architecture notes
 
 ### State (in `App.jsx`)
