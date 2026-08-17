@@ -3,7 +3,7 @@ import { VISIT_SCHEMA, normalizeVisit } from './visitSchema.js';
 import { ProviderError, createGroqKeyPool, isRetryableProviderStatus } from './keyPool.js';
 
 const MEDICAL_PROMPT = 'Medical OP visit dictation: vitals, complaints, history, clinical assessment, diagnosis, prescriptions, treatments, advice, tests, referral and follow-up.';
-const EXTRACTION_PROMPT = 'Extract only explicitly spoken facts into the JSON schema. Never diagnose, infer, autocomplete, or fabricate. Use null for missing scalar values and [] for missing lists. Normalize spoken numbers to numbers and unambiguous dates to YYYY-MM-DD. Return only the schema object.';
+const EXTRACTION_PROMPT = 'Extract only explicitly spoken facts into the JSON schema. Never diagnose, infer, autocomplete, or fabricate. Input will be a transcription from english/hindi/hinglsih/marathi or other common indian languages. Use null for missing scalar values and [] for missing lists. Normalize spoken numbers to numbers and unambiguous dates to YYYY-MM-DD. Return only the schema object.';
 const MAX_BODY_BYTES = 35 * 1024 * 1024;
 
 function sendJson(response, status, payload) {
@@ -31,11 +31,11 @@ async function callSarvam(audio, languageCode) {
   if (!key) throw new ProviderError('Sarvam is not configured.', { status: 503 });
   const form = new FormData();
   form.append('file', new Blob([audio.buffer], { type: audio.mimetype || 'audio/webm' }), audio.filename || 'dictation.webm');
-  form.append('model', 'saaras:v3'); form.append('mode', 'transcribe'); form.append('language_code', languageCode || 'unknown'); form.append('prompt', MEDICAL_PROMPT);
+  form.append('model', 'saaras:v3'); form.append('mode', 'translit'); form.append('language_code', languageCode || 'unknown'); form.append('prompt', MEDICAL_PROMPT);
   let response;
   try { response = await fetch('https://api.sarvam.ai/speech-to-text', { method: 'POST', headers: { 'api-subscription-key': key }, body: form }); } catch (error) { throw new ProviderError('Sarvam request failed.', { status: 502, retryable: true, cause: error }); }
   const data = await responseBody(response);
-  if (!response.ok) throw new ProviderError('Sarvam transcription failed.', { status: response.status, retryable: response.status >= 500 || response.status === 429 });
+  if (!response.ok) throw new ProviderError('Sarvam transcription failed. Ensure the recording is under 30 seconds.', { status: response.status, retryable: response.status >= 500 || response.status === 429 });
   if (!data.transcript?.trim()) throw new ProviderError('No speech was detected in the recording.', { status: 422 });
   return { transcript: data.transcript.trim(), languageCode: data.language_code || languageCode || null };
 }
@@ -63,7 +63,9 @@ export function createApp({ groqPool = createGroqPool(), transcribe = callSarvam
       const body = JSON.parse(await readBody(request));
       let transcript = String(body.transcript || '').trim(); let languageCode = body.languageCode || null;
       if (body.audioBase64) {
-        const audio = { buffer: Buffer.from(body.audioBase64, 'base64'), mimetype: body.mimeType || 'audio/webm', filename: body.filename || 'op-visit.webm' };
+        const audioBuffer = Buffer.from(body.audioBase64, 'base64');
+        if (audioBuffer.byteLength > MAX_BODY_BYTES) return sendJson(response, 413, { error: 'Audio file is too large.' });
+        const audio = { buffer: audioBuffer, mimetype: body.mimeType || 'audio/webm', filename: body.filename || 'op-visit.webm' };
         const result = await transcribe(audio, body.languageCode); transcript = result.transcript; languageCode = result.languageCode;
       }
       if (!transcript) return sendJson(response, 422, { error: 'Please provide a transcript or an audio recording.' });
